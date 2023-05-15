@@ -18,3 +18,30 @@ set (gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 enable_testing()
+include(GoogleTest)
+
+include_directories(
+    ${MAVTUNNEL_INCLUDE_DIR}
+    ${MAVLINK_INCLUDE_DIR}
+    )
+
+add_executable(test_endpoint_linux_uart
+    test_endpoint_linux_uart.cc)
+
+target_link_libraries(test_endpoint_linux_uart
+    PRIVATE
+    mavtunnel
+    util
+    GTest::gtest_main
+    GTest::gmock)
+
+gtest_discover_tests(test_endpoint_linux_uart)
+
+add_executable(main-pts-loopback
+    main-pts-loopback.c)
+
+target_link_libraries(main-pts-loopback
+    PRIVATE
+    mavtunnel
+    util)
+

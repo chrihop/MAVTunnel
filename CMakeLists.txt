@@ -25,20 +25,41 @@ set(CMAKE_C_STANDARD 11)
 include(FindPython3)
 include(FetchContent)
 
+message(STATUS "Python: " ${Python3_EXECUTABLE})
+
 FetchContent_Declare(
     mavlink
     GIT_REPOSITORY https://github.com/mavlink/mavlink.git
-    GIT_TAG 1.0.12
+    GIT_TAG master
     OVERRIDE_FIND_PACKAGE
 )
 
 message(STATUS "mavlink source dir: ${mavlink_SOURCE_DIR}")
 set (MAVLINK_SOURCE_DIR "${mavlink_SOURCE_DIR}" CACHE STRING "" FORCE)
+set (MAVLINK_INCLUDE_DIR "${mavlink_BINARY_DIR}/include" CACHE STRING "" FORCE)
+
+set (MAVLINK_DIALECT "ardupilotmega" CACHE STRING "" FORCE)
+set (MAVLINK_VERSION "2.0" CACHE STRING "" FORCE)
 
 FetchContent_MakeAvailable(mavlink)
 
-set (MAVLINK_INCLUDE_DIR "${mavlink_BINARY_DIR}/include" CACHE STRING "" FORCE)
+add_custom_command(
+    OUTPUT ${MAVLINK_DIALECT}-${MAVLINK_VERSION}-stamp
+    COMMAND PYTHONPATH=$ENV{PYTHONPATH}:${MAVLINK_SOURCE_DIR}
+            ${Python3_EXECUTABLE} -m pymavlink.tools.mavgen
+            --lang=C --wire-protocol=${MAVLINK_VERSION}
+            --output=${MAVLINK_INCLUDE_DIR}/v${MAVLINK_VERSION}
+            ${MAVLINK_SOURCE_DIR}/message_definitions/v1.0/${MAVLINK_DIALECT}.xml
+            COMMAND touch ${MAVLINK_DIALECT}-${MAVLINK_VERSION}-stamp
+)
+
+add_custom_target(${MAVLINK_DIALECT}-${MAVLINK_VERSION}
+            DEPENDS ${MAVLINK_DIALECT}-${MAVLINK_VERSION}-stamp)
+
 set (MAVTUNNEL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/inc" CACHE STRING "" FORCE)
+
+add_custom_target(mavlink-headers
+    DEPENDS ${MAVLINK_DIALECT}-${MAVLINK_VERSION})
 
 if (MAVTUNNEL_BAREMETAL)
 add_compile_options(-nostdlib -nostdinc -ffreestanding -fno-builtin
@@ -72,10 +93,6 @@ link_libraries(
     ${C_LIBM_FILE}
 )
 
-include_directories(
-    inc/baremetal
-)
-
 else ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -103,3 +120,4 @@ add_compile_options(${EXTRA_C_FLAGS})
 
 add_subdirectory(src)
 add_subdirectory(tests)
+add_subdirectory(tools)

@@ -1,10 +1,14 @@
 #ifndef _MAVTUNNEL_TUNNEL_H_
 #define _MAVTUNNEL_TUNNEL_H_
 
+#include "os.h"
+#include <v2.0/ardupilotmega/mavlink.h>
+
 enum mavtunnel_error_t
 {
     MERR_OK,
     MERR_END,
+    MERR_DEVICE_ERROR,
     MERR_BAD_CRC,
     MERR_BAD_MAGIC,
     MERR_BAD_LENGTH,
@@ -16,11 +20,12 @@ enum mavtunnel_error_t
 
 struct mavtunnel_reader_t;
 
-typedef int (*read_byte_t)(struct mavtunnel_reader_t* ctx);
+typedef ssize_t (*read_t)(struct mavtunnel_reader_t* ctx, uint8_t* bytes, size_t len);
 
 struct mavtunnel_reader_t
 {
-    read_byte_t read_byte;
+    void * object;
+    read_t read;
 };
 
 struct mavtunnel_writer_t;
@@ -30,6 +35,7 @@ typedef enum mavtunnel_error_t (*write_t)(
 
 struct mavtunnel_writer_t
 {
+    void * object;
     write_t write;
 };
 
@@ -40,6 +46,7 @@ typedef enum mavtunnel_error_t (*encode_t)(
 
 struct mavtunnel_codec_t
 {
+    void * object;
     encode_t encode;
 };
 
@@ -50,19 +57,33 @@ enum mavtunnel_status_t
     MT_STATUS_FAILURE,
 };
 
+#define MAVTUNNEL_READ_BUFFER_SIZE 1024
+#define MAVTUNNEL_UPDATE_INTERVAL_US 2000000
+
+enum mavtunnel_perf_metrics_t
+{
+    MT_PERF_RECV_COUNT,
+    MT_PERF_RECV_BYTE,
+    MT_PERF_DROP_COUNT,
+    MT_PERF_SENT_COUNT,
+
+    MAX_MT_PERF_METRICS,
+};
+
 struct mavtunnel_t
 {
     size_t                     id;
+    atomic_bool                terminate;
     enum mavtunnel_status_t    mode;
-    struct mavtunnel_reader_t* reader;
-    struct mavtunnel_writer_t* writer;
-    struct mavtunnel_codec_t*  codec;
+    struct mavtunnel_reader_t  reader;
+    struct mavtunnel_writer_t  writer;
+    struct mavtunnel_codec_t   codec;
+    uint8_t                    read_buffer[MAVTUNNEL_READ_BUFFER_SIZE];
     mavlink_message_t          msg;
     mavlink_status_t           status;
 #ifdef MAVTUNNEL_PROFILING
-    size_t message_count;
-    size_t byte_count;
-    size_t drop_count;
+    uint64_t count[MAX_MT_PERF_METRICS], last[MAX_MT_PERF_METRICS];
+    uint64_t last_update_us;
 #endif
 };
 
@@ -73,13 +94,13 @@ extern "C"
 {
 #endif
 
-    void                   mavtunnel_init(struct mavtunnel_t* ctx,
-                          struct mavtunnel_reader_t* reader, struct mavtunnel_writer_t* writer,
-                          struct mavtunnel_codec_t* codec);
+void mavtunnel_init(struct mavtunnel_t* ctx, size_t id);
 
-    enum mavtunnel_error_t mavtunnel_spin_once(struct mavtunnel_t* ctx);
+enum mavtunnel_error_t mavtunnel_spin_once(struct mavtunnel_t* ctx);
 
-    void                   mavtunnel_spin(struct mavtunnel_t* ctx);
+void mavtunnel_spin(struct mavtunnel_t* ctx);
+
+void mavtunnel_exit(struct mavtunnel_t * ctx);
 
 #if __cplusplus
 };

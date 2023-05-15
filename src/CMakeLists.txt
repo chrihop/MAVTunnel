@@ -1,7 +1,18 @@
 cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
 
 set (MAVTUNNEL_SRC
-    tunnel.c)
+    tunnel.c
+    codec_passthrough.c)
+
+if (MAVTUNNEL_BAREMETAL)
+
+else()
+
+    list(APPEND MAVTUNNEL_SRC
+        endpoint_linux_uart.c
+        )
+
+endif()
 
 add_library(mavtunnel
     STATIC
@@ -13,6 +24,6 @@ target_include_directories(mavtunnel
     ${MAVTUNNEL_INCLUDE_DIR})
 
 add_dependencies(mavtunnel
-    ardupilotmega.xml-v1.0)
+    mavlink-headers)
 
 

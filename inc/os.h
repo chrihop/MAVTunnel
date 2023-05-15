@@ -4,24 +4,35 @@
 #define likely(x)              __builtin_expect(!!(x), 1)
 #define unlikely(x)            __builtin_expect(!!(x), 0)
 
-#define offsetof(type, member) __builtin_offsetof(type, member)
-
 #ifdef __cplusplus
+
+#include <atomic>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <cstdint>
+#include <cstring>
+
+using namespace std;
 
 #else /* __cplusplus */
 
+#define offsetof(type, member) __builtin_offsetof(type, member)
+
 #define static_assert _Static_assert
 
-#endif /* __cplusplus */
-
-#ifdef MAVTUNNEL_LINUX
-#include <execinfo.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+
+#endif /* __cplusplus */
+
+#ifdef MAVTUNNEL_LINUX
+#include <execinfo.h>
 
 static inline void
 print_backtrace(void)
@@ -111,6 +122,22 @@ static inline unsigned long long time_us(void)
 
 #endif
 
+#if __cplusplus
+extern "C" {
+#endif
 
+static inline void puthex(uint8_t * buf, size_t len)
+{
+    INFO("%lu: ", len);
+    for (size_t i = 0; i < len; i++)
+    {
+        printf("%02x", buf[i]);
+    }
+    printf("\n");
+}
+
+#if __cplusplus
+}
+#endif
 
 #endif /* !_MAVTUNNEL_OS_H_ */
