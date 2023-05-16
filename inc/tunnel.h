@@ -83,6 +83,7 @@ struct mavtunnel_t
     mavlink_status_t           status;
 #ifdef MAVTUNNEL_PROFILING
     uint64_t count[MAX_MT_PERF_METRICS], last[MAX_MT_PERF_METRICS];
+    uint64_t exec_time_us;
     uint64_t last_update_us;
 #endif
 };

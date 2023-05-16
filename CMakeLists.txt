@@ -27,6 +27,9 @@ include(FetchContent)
 
 message(STATUS "Python: " ${Python3_EXECUTABLE})
 
+#
+# MAVLINK
+#
 FetchContent_Declare(
     mavlink
     GIT_REPOSITORY https://github.com/mavlink/mavlink.git
@@ -60,6 +63,23 @@ set (MAVTUNNEL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/inc" CACHE STRING "" FOR
 
 add_custom_target(mavlink-headers
     DEPENDS ${MAVLINK_DIALECT}-${MAVLINK_VERSION})
+
+#
+# ATTESTATION
+#
+FetchContent_Declare(
+    attestation
+    GIT_REPOSITORY https://github.com/chrihop/attestation.git
+    GIT_TAG v2
+)
+
+FetchContent_MakeAvailable(attestation)
+
+set (ATTESTATION_INCLUDE_DIR "${attestation_SOURCE_DIR}/inc" CACHE STRING "" FORCE)
+set (MBEDTLS_INCLUDE_DIR     "${attestation_SOURCE_DIR}/backend/mbedtls/include" CACHE STRING "" FORCE)
+#
+# --
+#
 
 if (MAVTUNNEL_BAREMETAL)
 add_compile_options(-nostdlib -nostdinc -ffreestanding -fno-builtin
@@ -101,9 +121,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_link_options(-fsanitize=address,undefined -rdynamic)
 endif()
 
-add_compile_definitions(
-    _STD_LIBC_
-)
+add_compile_definitions(_STD_LIBC_)
+add_compile_definitions(POSIX_LIBC)
 
 link_libraries(
     pthread

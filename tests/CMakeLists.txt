@@ -23,6 +23,8 @@ include(GoogleTest)
 include_directories(
     ${MAVTUNNEL_INCLUDE_DIR}
     ${MAVLINK_INCLUDE_DIR}
+    ${ATTESTATION_INCLUDE_DIR}
+    ${MBEDTLS_INCLUDE_DIR}
     )
 
 add_executable(test_endpoint_linux_uart
@@ -35,7 +37,19 @@ target_link_libraries(test_endpoint_linux_uart
     GTest::gtest_main
     GTest::gmock)
 
+add_executable(test_codec_chacha20
+    test_codec_chacha20.cc)
+
+target_link_libraries(test_codec_chacha20
+    PRIVATE
+    mavtunnel
+    crypto_abstract
+    mbedcrypto
+    GTest::gtest_main
+    GTest::gmock)
+
 gtest_discover_tests(test_endpoint_linux_uart)
+gtest_discover_tests(test_codec_chacha20)
 
 add_executable(main-pts-loopback
     main-pts-loopback.c)

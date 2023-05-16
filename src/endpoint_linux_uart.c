@@ -9,6 +9,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/eventfd.h>
 
 #include <v2.0/ardupilotmega/mavlink.h>
 
@@ -61,6 +62,15 @@ ep_linux_uart_epoll(struct endpoint_linux_uart_t * ep)
         return MERR_END;
     }
 
+    ep->terminate_fd = eventfd(0, EFD_NONBLOCK);
+    ev.events = EPOLLIN;
+    ev.data.fd = ep->terminate_fd;
+    if (epoll_ctl(ep->epoll, EPOLL_CTL_ADD, ep->terminate_fd, &ev) < 0)
+    {
+        WARN("Failed to add terminate eventfd to epoll: %s\n", strerror(errno));
+        return MERR_END;
+    }
+
     return MERR_OK;
 }
 
@@ -101,6 +111,13 @@ ep_linux_uart_read(struct mavtunnel_reader_t * rd,
     } else if (n_events == 0)
     {
         return 0;
+    }
+
+    if (ep->event[0].data.fd == ep->terminate_fd)
+    {
+        /* terminate event */
+        atomic_store(&ep->terminated, true);
+        return -MERR_END;
     }
 
     if (ep->event[0].data.fd != ep->fd)
@@ -157,6 +174,13 @@ ep_linux_uart_destroy(struct endpoint_linux_uart_t * ep)
     ASSERT(ep != NULL);
     close(ep->fd);
     free(ep->device_path);
+}
+
+void
+ep_linux_uart_interrupt(struct endpoint_linux_uart_t * ep)
+{
+    ASSERT(ep != NULL);
+    eventfd_write(ep->terminate_fd, 1);
 }
 
 void

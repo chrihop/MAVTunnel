@@ -18,6 +18,7 @@ mavtunnel_init(struct mavtunnel_t* ctx, size_t id)
 
 #ifdef MAVTUNNEL_PROFILING
     ctx->last_update_us = time_us();
+    ctx->exec_time_us = 0;
     memset(ctx->count, 0, sizeof(ctx->count));
     memset(ctx->last, 0, sizeof(ctx->last));
 #endif
@@ -39,30 +40,33 @@ static void mavtunnel_perf_update(struct mavtunnel_t * ctx)
     {
         return;
     }
+    uint64_t interval = now - ctx->last_update_us;
 
-    uint64_t delta[MAX_MT_PERF_METRICS];
+    uint64_t rate[MAX_MT_PERF_METRICS];
     for (int i = 0; i < MAX_MT_PERF_METRICS; i++)
     {
-        delta[i] = ctx->count[i] - ctx->last[i];
+        rate[i] = (ctx->count[i] - ctx->last[i]) * 1000000 / interval;
         ctx->last[i] = ctx->count[i];
     }
 
-    INFO("tunnel %ld: ", ctx->id);
+    uint64_t cpu_load = ctx->exec_time_us * 100000 / interval;
+    ctx->exec_time_us = 0;
+
+    INFO("tunnel %ld: CPU %3lu.%-3lu%%, ", ctx->id, cpu_load / 1000, cpu_load % 1000);
     for (int i = 0; i < MAX_MT_PERF_METRICS; i++)
     {
-        printf("%s rate %3lu.%-3lu k/s, ", perf_metric_name[i], delta[i] / 1000,
-            delta[i] % 1000);
+        printf("%s rate %3lu.%-3lu k/s, ", perf_metric_name[i], rate[i] / 1000,
+            rate[i] % 1000);
     }
     printf("total: ");
     for (int i = 0; i < MAX_MT_PERF_METRICS; i++)
     {
-        printf("%s %3lu.%-3lu k, ", perf_metric_name[i], ctx->count[i] / 1000, ctx->count[i] % 1000);
+        printf("%s %6lu, ", perf_metric_name[i], ctx->count[i]);
     }
     printf("\n");
     ctx->last_update_us = now;
 }
 #endif
-
 
 enum mavtunnel_error_t
 mavtunnel_spin_once(struct mavtunnel_t* ctx)
@@ -73,8 +77,10 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
     ssize_t                n;
     enum mavtunnel_error_t err;
 
+
     n = ctx->reader.read(
         &ctx->reader, ctx->read_buffer, MAVTUNNEL_READ_BUFFER_SIZE);
+
     if (n < 0)
     {
         WARN("tunnel %ld failed to read (%zd)\n", ctx->id, n);
@@ -83,6 +89,10 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
 
 #if (DEBUG_MODE == 1)
     puthex(ctx->read_buffer, n);
+#endif
+
+#ifdef MAVTUNNEL_PROFILING
+    uint64_t exec_start = time_us();
 #endif
 
     for (ssize_t i = 0; i < n; i++)
@@ -123,6 +133,11 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
             ctx->count[MT_PERF_SENT_COUNT] ++;
         }
     }
+
+#ifdef MAVTUNNEL_PROFILING
+    ctx->exec_time_us += time_us() - exec_start;
+#endif
+
 #ifdef MAVTUNNEL_PROFILING
     mavtunnel_perf_update(ctx);
 #endif

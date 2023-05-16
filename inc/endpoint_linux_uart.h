@@ -10,8 +10,9 @@ struct endpoint_linux_uart_t
 {
     int            fd;
     int            epoll;
-    struct         epoll_event event[1];
+    struct         epoll_event event[2];
     char*          device_path;
+    int            terminate_fd;
     atomic_bool    terminated;
     uint8_t        out[4096];
 };
@@ -28,6 +29,7 @@ void ep_linux_uart_attach_reader(struct mavtunnel_t * tunnel, struct endpoint_li
 
 void ep_linux_uart_attach_writer(struct mavtunnel_t * tunnel, struct endpoint_linux_uart_t * ep);
 
+void ep_linux_uart_interrupt(struct endpoint_linux_uart_t * ep);
 
 #if __cplusplus
 };

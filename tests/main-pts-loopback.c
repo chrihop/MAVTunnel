@@ -43,6 +43,8 @@ static void sig_int(int signum)
 {
     (void)signum;
     atomic_store(&to_exit, true);
+    ep_linux_uart_interrupt(&ep_sitl);
+    ep_linux_uart_interrupt(&ep_gcs);
 }
 
 int main(int argc, char ** argv)
@@ -74,9 +76,6 @@ int main(int argc, char ** argv)
         printf("failed to create down thread\n");
         return -1;
     }
-
-    printf("Press any key to exit...\n");
-    getchar();
 
     thrd_join(up_thread, NULL);
     thrd_join(down_thread, NULL);

@@ -17,7 +17,9 @@ using namespace std;
 
 #else /* __cplusplus */
 
+#ifndef offsetof
 #define offsetof(type, member) __builtin_offsetof(type, member)
+#endif /* offsetof */
 
 #define static_assert _Static_assert
 
@@ -62,10 +64,17 @@ static inline unsigned long long time_us(void)
     return (unsigned long long)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
 }
 
+#ifndef INFO
 #define INFO(fmt, ...) printf("[I] " fmt, ##__VA_ARGS__)
+#endif /* INFO */
+
+#ifndef WARN
 #define WARN(fmt, ...)                                                         \
     printf("[W] %s:%u (in %s()): " fmt, __FILE__, __LINE__, __FUNCTION__,      \
         ##__VA_ARGS__)
+#endif /* WARN */
+
+#if !defined(PANIC) || !defined(PRIMITIVE_PANIC_DEFINED)
 #define PANIC(fmt, ...)                                                        \
     do                                                                         \
     {                                                                          \
@@ -74,7 +83,10 @@ static inline unsigned long long time_us(void)
         print_backtrace();                                                     \
         exit(0);                                                               \
     } while (0)
+#endif /* PANIC */
 
+
+#ifndef ASSERT
 #define ASSERT(cond)                                                           \
     do                                                                         \
     {                                                                          \
@@ -86,6 +98,7 @@ static inline unsigned long long time_us(void)
             exit(0);                                                           \
         }                                                                      \
     } while (0)
+#endif /* ASSERT */
 
 #elif defined (_CERTIKOS_)
 
