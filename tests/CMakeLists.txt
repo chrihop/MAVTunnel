@@ -59,3 +59,9 @@ target_link_libraries(main-pts-loopback
     mavtunnel
     util)
 
+add_executable(main-ttyAMA
+    main-ttyAMA.c)
+
+target_link_libraries(main-ttyAMA
+    PRIVATE
+    mavtunnel)
