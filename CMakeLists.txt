@@ -82,36 +82,46 @@ set (MBEDTLS_INCLUDE_DIR     "${attestation_SOURCE_DIR}/backend/mbedtls/include"
 #
 
 if (MAVTUNNEL_BAREMETAL)
-add_compile_options(-nostdlib -nostdinc -ffreestanding -fno-builtin
-    -fno-common -fno-exceptions -fno-stack-protector
-    -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-strict-aliasing
-    -fno-omit-frame-pointer -fno-strict-overflow -fno-delete-null-pointer-checks
-    -fno-PIE -fno-pic -fno-pie -fno-pic -fno-stack-protector -fno-unwind-tables
-    -fno-asynchronous-unwind-tables -fno-exceptions -fno-omit-frame-pointer
-    -fno-delete-null-pointer-checks)
+    if (BUILD_FOR STREQUAL "certikos_kernel")
+        message(STATUS "Attestation: CertiKOS kernel build")
+        add_compile_definitions(CERTIKOS_KERNEL)
+    elseif (BUILD_FOR STREQUAL "certikos_user")
+        message(STATUS "Attestation: CertiKOS user build")
+        add_compile_definitions(CERTIKOS_USER)
+    else()
 
-add_link_options(
-    -nostdlib -nostdinc -ffreestanding -fno-builtin
-    -fno-common -fno-exceptions -fno-stack-protector
-    -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-strict-aliasing
-    -fno-omit-frame-pointer -fno-strict-overflow -fno-delete-null-pointer-checks
-    -fno-PIE -fno-pic -fno-pie -fno-pic -fno-stack-protector -fno-unwind-tables
-    -fno-asynchronous-unwind-tables -fno-exceptions -fno-omit-frame-pointer
-    -fno-delete-null-pointer-checks
-)
 
-execute_process(COMMAND ${CMAKE_C_COMPILER} -print-file-name=libgcc.a
-    OUTPUT_VARIABLE C_LIBGCC_FILE
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    add_compile_options(-nostdlib -nostdinc -ffreestanding -fno-builtin
+        -fno-common -fno-exceptions -fno-stack-protector
+        -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-strict-aliasing
+        -fno-omit-frame-pointer -fno-strict-overflow -fno-delete-null-pointer-checks
+        -fno-PIE -fno-pic -fno-pie -fno-pic -fno-stack-protector -fno-unwind-tables
+        -fno-asynchronous-unwind-tables -fno-exceptions -fno-omit-frame-pointer
+        -fno-delete-null-pointer-checks)
 
-execute_process(COMMAND ${CMAKE_C_COMPILER} -print-file-name=libm.a
-    OUTPUT_VARIABLE C_LIBM_FILE
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    add_link_options(
+        -nostdlib -nostdinc -ffreestanding -fno-builtin
+        -fno-common -fno-exceptions -fno-stack-protector
+        -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-strict-aliasing
+        -fno-omit-frame-pointer -fno-strict-overflow -fno-delete-null-pointer-checks
+        -fno-PIE -fno-pic -fno-pie -fno-pic -fno-stack-protector -fno-unwind-tables
+        -fno-asynchronous-unwind-tables -fno-exceptions -fno-omit-frame-pointer
+        -fno-delete-null-pointer-checks
+    )
 
-link_libraries(
-    ${C_LIBGCC_FILE}
-    ${C_LIBM_FILE}
-)
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -print-file-name=libgcc.a
+        OUTPUT_VARIABLE C_LIBGCC_FILE
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -print-file-name=libm.a
+        OUTPUT_VARIABLE C_LIBM_FILE
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    link_libraries(
+        ${C_LIBGCC_FILE}
+        ${C_LIBM_FILE}
+    )
+endif()
 
 else ()
 
