@@ -67,6 +67,10 @@ add_custom_target(mavlink-headers
 #
 # ATTESTATION
 #
+if (BUILD_FOR)
+    set (BUILD_FOR ${BUILD_FOR} CACHE STRING "build for os target" FORCE)
+endif ()
+
 FetchContent_Declare(
     attestation
     GIT_REPOSITORY https://github.com/chrihop/attestation.git
@@ -130,12 +134,13 @@ link_libraries(
 
 endif()
 
+
+
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function")
 add_compile_options(-Wno-address-of-packed-member)
 add_compile_options(-Wno-missing-field-initializers)
 add_compile_options(${EXTRA_C_FLAGS})
-
-
 
 add_subdirectory(src)
 add_subdirectory(tests)
