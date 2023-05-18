@@ -6,6 +6,10 @@ set (MAVTUNNEL_SRC
     codec_chacha20.c)
 
 if (MAVTUNNEL_BAREMETAL)
+    if (BUILD_FOR STREQUAL "certikos_user")
+        list(APPEND MAVTUNNEL_SRC
+            endpoint_certikos_uart.c)
+    endif()
 
 else()
 

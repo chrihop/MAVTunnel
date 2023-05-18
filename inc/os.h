@@ -23,18 +23,18 @@ using namespace std;
 
 #define static_assert _Static_assert
 
-#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <string.h>
 
 #endif /* __cplusplus */
 
 #ifdef MAVTUNNEL_LINUX
+#include <stdatomic.h>
+#include <time.h>
 #include <execinfo.h>
+#include <stdbool.h>
 
 static inline void
 print_backtrace(void)
@@ -104,6 +104,7 @@ static inline unsigned long long time_us(void)
 
 #include <stdio.h>
 #include <time.h>
+#include <stdatomic.h>
 
 static inline unsigned long long time_us(void)
 {
