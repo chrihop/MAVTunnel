@@ -52,10 +52,10 @@ static void mavtunnel_perf_update(struct mavtunnel_t * ctx)
     uint64_t cpu_load = ctx->exec_time_us * 100000 / interval;
     ctx->exec_time_us = 0;
 
-    INFO("tunnel %ld: CPU %3lu.%-3lu%%, ", ctx->id, cpu_load / 1000, cpu_load % 1000);
+    INFO("tunnel %ld: CPU %3lu.%03lu%%, ", ctx->id, cpu_load / 1000, cpu_load % 1000);
     for (int i = 0; i < MAX_MT_PERF_METRICS; i++)
     {
-        printf("%s rate %3lu.%-3lu k/s, ", perf_metric_name[i], rate[i] / 1000,
+        printf("%s rate %3lu.%03lu k/s, ", perf_metric_name[i], rate[i] / 1000,
             rate[i] % 1000);
     }
     printf("total: ");
