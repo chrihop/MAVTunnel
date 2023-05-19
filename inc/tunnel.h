@@ -18,6 +18,8 @@ enum mavtunnel_error_t
     MERR_BAD_ID,
 };
 
+#define MAVTUNNEL_OUTPUT_BUFFER_SIZE 1024
+
 struct mavtunnel_reader_t;
 
 typedef ssize_t (*read_t)(struct mavtunnel_reader_t* ctx, uint8_t* bytes, size_t len);
@@ -102,6 +104,13 @@ enum mavtunnel_error_t mavtunnel_spin_once(struct mavtunnel_t* ctx);
 void mavtunnel_spin(struct mavtunnel_t* ctx);
 
 void mavtunnel_exit(struct mavtunnel_t * ctx);
+
+/**
+ * Aux
+ */
+enum mavtunnel_error_t mavtunnel_check_out_buffer(uint8_t * buf, size_t len);
+
+size_t mavtunnel_finalize_message(uint8_t * buf, mavlink_message_t * msg);
 
 #if __cplusplus
 };

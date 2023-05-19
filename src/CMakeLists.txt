@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
 
 set (MAVTUNNEL_SRC
     tunnel.c
+    check.c
     codec_passthrough.c
     codec_chacha20.c)
 

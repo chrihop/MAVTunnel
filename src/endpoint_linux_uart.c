@@ -157,7 +157,7 @@ ep_linux_uart_write(struct mavtunnel_writer_t * wr, mavlink_message_t * msg)
         return MERR_END;
     }
 
-    int len = mavlink_msg_to_send_buffer(ep->out, msg);
+    int len = mavtunnel_finalize_message(ep->out, msg);
     ssize_t written = write(ep->fd, ep->out, len);
     if (written == -1 || written < len)
     {

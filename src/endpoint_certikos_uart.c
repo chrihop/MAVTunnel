@@ -35,7 +35,7 @@ static enum mavtunnel_error_t
         return MERR_END;
     }
 
-    size_t len = mavlink_msg_to_send_buffer(ep->out, msg);
+    size_t len = mavtunnel_finalize_message(ep->out, msg);
     ASSERT(len <= MAVLINK_MAX_PACKET_LEN && "mavlink message too long");
     writes(ep->stream, ep->out, len);
 

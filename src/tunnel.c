@@ -164,3 +164,14 @@ void mavtunnel_exit(struct mavtunnel_t * ctx)
         atomic_store(&ctx->terminate, true);
     }
 }
+
+size_t
+mavtunnel_finalize_message(uint8_t * buf, mavlink_message_t * msg)
+{
+    uint8_t crc_extra = mavlink_get_crc_extra(msg);
+    size_t min_length = mavlink_min_message_length(msg);
+    mavlink_finalize_message_chan(msg, msg->sysid, msg->compid, MAVLINK_COMM_3,
+        min_length, msg->len, crc_extra);
+    size_t len = mavlink_msg_to_send_buffer(buf, msg);
+    return len;
+}

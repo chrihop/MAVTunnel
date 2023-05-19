@@ -11,7 +11,7 @@ struct endpoint_certikos_uart_t
     size_t          dev;
     console_id_t stream;
     atomic_bool terminated;
-    uint8_t     out[4096];
+    uint8_t     out[MAVTUNNEL_OUTPUT_BUFFER_SIZE];
 };
 
 #if __cplusplus

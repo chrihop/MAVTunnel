@@ -48,8 +48,21 @@ target_link_libraries(test_codec_chacha20
     GTest::gtest_main
     GTest::gmock)
 
+add_executable(test_mavtunnel
+    test_mavtunnel.cc)
+
+target_link_libraries(test_mavtunnel
+    PRIVATE
+    mavtunnel
+    crypto_abstract
+    mbedcrypto
+    GTest::gtest_main
+    GTest::gmock)
+
+
 gtest_discover_tests(test_endpoint_linux_uart)
 gtest_discover_tests(test_codec_chacha20)
+gtest_discover_tests(test_mavtunnel)
 
 add_executable(main-pts-loopback
     main-pts-loopback.c)
