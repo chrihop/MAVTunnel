@@ -54,17 +54,6 @@ int main(int argc, char ** argv)
     ep_linux_uart_init(&ep_sitl, "/dev/ttyAMA1");
     ep_linux_uart_init(&ep_gcs, "/dev/ttyAMA2");
 
-    while (true)
-    {
-        const char * sitl_msg = "SITL -> /dev/ttyAMA1";
-        write(ep_sitl.fd, "SITL -> /dev/ttyAMA1", strlen(sitl_msg));
-
-        const char * gcs_msg = "GCS -> /dev/ttyAMA2";
-        write(ep_gcs.fd, "GCS -> /dev/ttyAMA2", strlen(gcs_msg));
-
-        sleep(1);
-    }
-
     ep_linux_uart_attach_reader(&up, &ep_sitl);
     ep_linux_uart_attach_writer(&up, &ep_gcs);
     codec_passthrough_attach(&up);

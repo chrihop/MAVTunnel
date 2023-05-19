@@ -14,6 +14,7 @@
 
 struct mavtunnel_t up, down;
 struct endpoint_linux_uart_t ep_sitl, ep_gcs;
+struct stream_cipher_t encrypt, decrypt;
 
 static atomic_bool to_exit = ATOMIC_VAR_INIT(false);
 
@@ -57,11 +58,11 @@ int main(int argc, char ** argv)
 
     ep_linux_uart_attach_reader(&up, &ep_sitl);
     ep_linux_uart_attach_writer(&up, &ep_gcs);
-    codec_chacha20_attach(&up);
+    codec_chacha20_attach(&up, &encrypt);
 
     ep_linux_uart_attach_reader(&down, &ep_gcs);
     ep_linux_uart_attach_writer(&down, &ep_sitl);
-    codec_chacha20_attach(&down);
+    codec_chacha20_attach(&down, &decrypt);
 
     signal(SIGINT, sig_int);
     atomic_store(&to_exit, false);

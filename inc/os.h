@@ -23,6 +23,7 @@ using namespace std;
 
 #define static_assert _Static_assert
 
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -31,7 +32,6 @@ using namespace std;
 #endif /* __cplusplus */
 
 #ifdef MAVTUNNEL_LINUX
-#include <stdatomic.h>
 #include <time.h>
 #include <execinfo.h>
 #include <stdbool.h>
