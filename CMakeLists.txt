@@ -86,6 +86,7 @@ set (MBEDTLS_INCLUDE_DIR     "${attestation_SOURCE_DIR}/backend/mbedtls/include"
 #
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+else()
     set (MAVTUNNEL_INC_DIRS
         ${CMAKE_CURRENT_SOURCE_DIR}/inc
         ${MAVLINK_INCLUDE_DIR}
