@@ -1,0 +1,5 @@
+jsonschema
+ecdsa
+jinja2
+pyelftools
+pyyaml
