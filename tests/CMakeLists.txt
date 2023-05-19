@@ -65,3 +65,10 @@ add_executable(main-ttyAMA
 target_link_libraries(main-ttyAMA
     PRIVATE
     mavtunnel)
+
+add_executable(main-ttyAMA-passthrough
+    main-ttyAMA-passthrough.c)
+
+target_link_libraries(main-ttyAMA-passthrough
+    PRIVATE
+    mavtunnel)

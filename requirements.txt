@@ -3,3 +3,4 @@ ecdsa
 jinja2
 pyelftools
 pyyaml
+future

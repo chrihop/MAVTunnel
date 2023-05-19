@@ -55,11 +55,11 @@ make pts_fork
 pts_fork ./uart-sitl ./uart-sitl-tunnel
 pts_fork ./uart-gcs ./uart-gcs-tunnel
 
-./main-pts-loopback
+./tests/main-pts-loopback
 ```
 
 ```bash
 # mavtunnel for ttyAMA0 and ttyAMA1
 make main-ttyAMA
-./main-ttyAMA
+./tests/main-ttyAMA
 ```

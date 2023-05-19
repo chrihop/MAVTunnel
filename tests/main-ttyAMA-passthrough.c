@@ -2,7 +2,6 @@
 #include "tunnel.h"
 #include "endpoint_linux_uart.h"
 #include "codec_passthrough.h"
-#include "codec_chacha20.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -57,11 +56,11 @@ int main(int argc, char ** argv)
 
     ep_linux_uart_attach_reader(&up, &ep_sitl);
     ep_linux_uart_attach_writer(&up, &ep_gcs);
-    codec_chacha20_attach(&up);
+    codec_passthrough_attach(&up);
 
     ep_linux_uart_attach_reader(&down, &ep_gcs);
     ep_linux_uart_attach_writer(&down, &ep_sitl);
-    codec_chacha20_attach(&down);
+    codec_passthrough_attach(&down);
 
     signal(SIGINT, sig_int);
     atomic_store(&to_exit, false);

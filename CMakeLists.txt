@@ -34,7 +34,6 @@ FetchContent_Declare(
     mavlink
     GIT_REPOSITORY https://github.com/mavlink/mavlink.git
     GIT_TAG master
-    OVERRIDE_FIND_PACKAGE
 )
 
 message(STATUS "mavlink source dir: ${mavlink_SOURCE_DIR}")
