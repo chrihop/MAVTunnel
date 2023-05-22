@@ -55,11 +55,9 @@ ep_linux_udp_epoll(struct endpoint_linux_udp_t* ep)
 }
 
 enum mavtunnel_error_t
-ep_linux_udp_init(
-    struct endpoint_linux_udp_t* ep, const char* ip, uint16_t port)
+ep_linux_udp_init(struct endpoint_linux_udp_t* ep, uint16_t port)
 {
     ASSERT(ep != NULL);
-    ASSERT(ip != NULL);
 
     ep->fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (ep->fd == -1)
@@ -82,15 +80,14 @@ ep_linux_udp_init(
     }
 
     struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_port   = htons(port);
-    inet_pton(AF_INET, ip, &addr.sin_addr);
-    rv = bind(ep->fd, (struct sockaddr*)&addr, sizeof(addr));
+    addr.sin_family      = AF_INET;
+    addr.sin_port        = htons(port);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    rv                   = bind(ep->fd, (struct sockaddr*)&addr, sizeof(addr));
     if (rv < 0)
     {
-            WARN(
-                "Failed to bind socket %s:%u: %s\n", ip, port, strerror(errno));
-            return MERR_DEVICE_ERROR;
+        WARN("Failed to bind socket port %u: %s\n", port, strerror(errno));
+        return MERR_DEVICE_ERROR;
     }
 
     atomic_store(&ep->has_client, false);
@@ -162,8 +159,8 @@ ep_linux_udp_read(struct mavtunnel_reader_t* rd, uint8_t* bytes, size_t len)
     if (!atomic_load(&ep->has_client))
     {
         INFO("Client connected <--> %s:%u\n",
-            inet_ntoa(((struct sockaddr_in *) &ep->client)->sin_addr),
-            ntohs(((struct sockaddr_in *) &ep->client)->sin_port));
+            inet_ntoa(((struct sockaddr_in*)&ep->client)->sin_addr),
+            ntohs(((struct sockaddr_in*)&ep->client)->sin_port));
         atomic_store(&ep->has_client, true);
     }
 

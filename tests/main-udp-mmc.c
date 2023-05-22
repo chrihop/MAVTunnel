@@ -13,13 +13,13 @@
 #include <threads.h>
 #include <signal.h>
 
-#define SITL_IP         "192.168.10.103"
 #define GCS_IP          "192.168.10.103"
 #define SITL_PORT       14550
 #define GCS_PORT        15550
 
 struct mavtunnel_t up, down;
-struct endpoint_linux_udp_client_t ep_sitl, ep_gcs;
+struct endpoint_linux_udp_t ep_sitl;
+struct endpoint_linux_udp_client_t ep_gcs;
 struct stream_cipher_t encrypt, decrypt;
 
 static atomic_bool to_exit = ATOMIC_VAR_INIT(false);
@@ -51,7 +51,7 @@ static void sig_int(int signum)
 {
     (void)signum;
     atomic_store(&to_exit, true);
-    ep_linux_udp_client_interrupt(&ep_sitl);
+    ep_linux_udp_interrupt(&ep_sitl);
     ep_linux_udp_client_interrupt(&ep_gcs);
 }
 
@@ -59,15 +59,15 @@ int main(int argc, char ** argv)
 {
     mavtunnel_init(&up, 0);
     mavtunnel_init(&down, 1);
-    ep_linux_udp_client_init(&ep_sitl, SITL_IP, SITL_PORT);
+    ep_linux_udp_init(&ep_sitl, SITL_PORT);
     ep_linux_udp_client_init(&ep_gcs, GCS_IP, GCS_PORT);
 
-    ep_linux_udp_client_attach_reader(&up, &ep_sitl);
+    ep_linux_udp_attach_reader(&up, &ep_sitl);
     ep_linux_udp_client_attach_writer(&up, &ep_gcs);
     codec_chacha20_attach(&up, &encrypt);
 
     ep_linux_udp_client_attach_reader(&down, &ep_gcs);
-    ep_linux_udp_client_attach_writer(&down, &ep_sitl);
+    ep_linux_udp_attach_writer(&down, &ep_sitl);
     codec_chacha20_attach(&down, &decrypt);
 
     signal(SIGINT, sig_int);
@@ -88,7 +88,7 @@ int main(int argc, char ** argv)
     thrd_join(up_thread, NULL);
     thrd_join(down_thread, NULL);
 
-    ep_linux_udp_client_destroy(&ep_sitl);
+    ep_linux_udp_destroy(&ep_sitl);
     ep_linux_udp_client_destroy(&ep_gcs);
 
     return 0;

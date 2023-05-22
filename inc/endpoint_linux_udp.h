@@ -22,8 +22,8 @@ extern "C"
 {
 #endif
 
-enum mavtunnel_error_t ep_linux_udp_init(
-    struct endpoint_linux_udp_t* ep, const char* ip, uint16_t port);
+enum mavtunnel_error_t
+ep_linux_udp_init(struct endpoint_linux_udp_t* ep, uint16_t port);
 
 void ep_linux_udp_destroy(struct endpoint_linux_udp_t* ep);
 
