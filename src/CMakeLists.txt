@@ -16,6 +16,8 @@ else()
 
     list(APPEND MAVTUNNEL_SRC
         endpoint_linux_uart.c
+        endpoint_linux_udp.c
+        endpoint_linux_udp_client.c
         )
 
 endif()

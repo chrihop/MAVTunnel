@@ -88,3 +88,13 @@ add_executable(main-ttyAMA-passthrough
 target_link_libraries(main-ttyAMA-passthrough
     PRIVATE
     mavtunnel)
+
+add_executable(main-udp
+    main-udp.c)
+
+target_link_libraries(main-udp
+    PRIVATE
+    mavtunnel
+    crypto_abstract
+    mbedcrypto
+    )

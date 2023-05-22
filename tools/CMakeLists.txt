@@ -17,3 +17,6 @@ add_executable(pts_fork
 target_link_libraries(pts_fork
     pts_common
     util)
+
+add_executable(profile_latency
+    profile_latency.cc)
