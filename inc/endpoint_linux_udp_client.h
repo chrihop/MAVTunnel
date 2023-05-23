@@ -13,7 +13,6 @@ struct endpoint_linux_udp_client_t
     int                epoll, terminate_fd;
     struct epoll_event event[2];
     atomic_bool        terminated;
-    uint8_t            out[MAVTUNNEL_OUTPUT_BUFFER_SIZE];
 };
 
 #if __cplusplus

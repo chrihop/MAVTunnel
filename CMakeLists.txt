@@ -4,6 +4,7 @@ project(MAVTunnel)
 
 option (MAVTUNNEL_BAREMETAL "baremetal build" OFF)
 option (MAVTUNNEL_PROFILING "enable profiling" ON)
+option (MAVTUNNEL_TOOLS     "build tools" OFF)
 
 if (MAVTUNNEL_BAREMETAL)
     message(STATUS "MAVTunnel: baremetal build")
@@ -164,4 +165,7 @@ add_compile_options(${EXTRA_C_FLAGS})
 
 add_subdirectory(src)
 add_subdirectory(tests)
-add_subdirectory(tools)
+
+if (MAVTUNNEL_TOOLS)
+    add_subdirectory(tools)
+endif()

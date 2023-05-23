@@ -32,8 +32,7 @@ struct mavtunnel_reader_t
 
 struct mavtunnel_writer_t;
 
-typedef enum mavtunnel_error_t (*write_t)(
-    struct mavtunnel_writer_t* ctx, mavlink_message_t* msg);
+typedef enum mavtunnel_error_t (*write_t)(struct mavtunnel_writer_t* ctx, const uint8_t* bytes, size_t len);
 
 struct mavtunnel_writer_t
 {
@@ -81,8 +80,10 @@ struct mavtunnel_t
     struct mavtunnel_writer_t  writer;
     struct mavtunnel_codec_t   codec;
     uint8_t                    read_buffer[MAVTUNNEL_READ_BUFFER_SIZE];
-    mavlink_message_t          msg;
-    mavlink_status_t           status;
+    mavlink_message_t          rx_msg;
+    mavlink_status_t           rx_status;
+    mavlink_status_t           tx_status;
+    uint8_t                    tx_buf[MAVTUNNEL_OUTPUT_BUFFER_SIZE];
 #ifdef MAVTUNNEL_PROFILING
     uint64_t count[MAX_MT_PERF_METRICS], last[MAX_MT_PERF_METRICS];
     uint64_t exec_time_us;
@@ -109,8 +110,6 @@ void mavtunnel_exit(struct mavtunnel_t * ctx);
  * Aux
  */
 enum mavtunnel_error_t mavtunnel_check_out_buffer(uint8_t * buf, size_t len);
-
-size_t mavtunnel_finalize_message(uint8_t * buf, mavlink_message_t * msg);
 
 #if __cplusplus
 };

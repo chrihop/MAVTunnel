@@ -14,7 +14,6 @@ struct endpoint_linux_uart_t
     char*          device_path;
     int            terminate_fd;
     atomic_bool    terminated;
-    uint8_t        out[MAVTUNNEL_OUTPUT_BUFFER_SIZE];
 };
 
 #if __cplusplus

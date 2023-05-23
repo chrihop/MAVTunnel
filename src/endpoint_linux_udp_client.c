@@ -159,18 +159,17 @@ ep_linux_client_read(struct mavtunnel_reader_t* rd, uint8_t* bytes, size_t len)
 }
 
 static enum mavtunnel_error_t
-ep_linux_udp_client_write(struct mavtunnel_writer_t* wr, mavlink_message_t* msg)
+ep_linux_udp_client_write(struct mavtunnel_writer_t* wr, const uint8_t* bytes, size_t len)
 {
     ASSERT(wr != NULL);
-    ASSERT(msg != NULL);
+    ASSERT(bytes != NULL);
     ASSERT(wr->object != NULL);
 
     struct endpoint_linux_udp_client_t* ep;
     ep = wr->object;
 
-    size_t  len = mavtunnel_finalize_message(ep->out, msg);
     ssize_t n;
-    n = sendto(ep->fd, ep->out, len, 0, &ep->server, SOCKADDR_SIZE);
+    n = sendto(ep->fd, bytes, len, 0, &ep->server, SOCKADDR_SIZE);
     if (n < 0)
     {
         WARN("Failed to write to socket: %s\n", strerror(errno));

@@ -14,7 +14,8 @@ mavtunnel_init(struct mavtunnel_t* ctx, size_t id)
     ctx->mode = MT_STATUS_OK;
     ctx->id = id;
     atomic_store(&ctx->terminate, false);
-    memset(&ctx->status, 0, sizeof(ctx->status));
+    memset(&ctx->rx_status, 0, sizeof(ctx->rx_status));
+    memset(&ctx->tx_status, 0, sizeof(ctx->tx_status));
 
 #ifdef MAVTUNNEL_PROFILING
     ctx->last_update_us = time_us();
@@ -68,6 +69,17 @@ static void mavtunnel_perf_update(struct mavtunnel_t * ctx)
 }
 #endif
 
+static size_t
+mavtunnel_finalize_message(uint8_t * buf, mavlink_status_t * status, mavlink_message_t * msg)
+{
+    uint8_t crc_extra = mavlink_get_crc_extra(msg);
+    size_t min_length = mavlink_min_message_length(msg);
+    mavlink_finalize_message_buffer(msg, msg->sysid, msg->compid, status, min_length, msg->len, crc_extra);
+    size_t len = mavlink_msg_to_send_buffer(buf, msg);
+    return len;
+}
+
+
 enum mavtunnel_error_t
 mavtunnel_spin_once(struct mavtunnel_t* ctx)
 {
@@ -99,29 +111,32 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
     {
         ctx->count[MT_PERF_RECV_BYTE]++;
         rv = mavlink_parse_char(
-            ctx->id, ctx->read_buffer[i], &ctx->msg, &ctx->status);
+            ctx->id, ctx->read_buffer[i], &ctx->rx_msg, &ctx->rx_status);
         if (rv == 0)
         {
-            if (ctx->status.packet_rx_drop_count != 0)
+            if (ctx->rx_status.packet_rx_drop_count != 0)
             {
-                ctx->count[MT_PERF_DROP_COUNT] += ctx->status.packet_rx_drop_count;
+                ctx->count[MT_PERF_DROP_COUNT] += ctx->rx_status.packet_rx_drop_count;
 
                 WARN("tunnel %ld: %d packets dropped. total dropped %lu\n", ctx->id,
-                    ctx->status.packet_rx_drop_count, ctx->count[MT_PERF_DROP_COUNT]);
+                    ctx->rx_status.packet_rx_drop_count, ctx->count[MT_PERF_DROP_COUNT]);
                 continue;
             }
         }
         else if (rv == 1)
         {
             ctx->count[MT_PERF_RECV_COUNT] ++;
-            if ((err = ctx->codec.encode(&ctx->codec, &ctx->msg)) != MERR_OK)
+            if ((err = ctx->codec.encode(&ctx->codec, &ctx->rx_msg)) != MERR_OK)
             {
                 WARN(
                     "tunnel %ld failed to encode message (%d)\n", ctx->id, err);
                 continue;
             }
 
-            if ((err = ctx->writer.write(&ctx->writer, &ctx->msg)) != MERR_OK)
+            ctx->tx_status.current_tx_seq = ctx->rx_msg.seq;
+            size_t len = mavtunnel_finalize_message(ctx->tx_buf, &ctx->tx_status, &ctx->rx_msg);
+
+            if ((err = ctx->writer.write(&ctx->writer, ctx->tx_buf, len)) != MERR_OK)
             {
                 WARN("tunnel %ld failed to write message (%d)\n", ctx->id, err);
                 continue;
@@ -165,13 +180,3 @@ void mavtunnel_exit(struct mavtunnel_t * ctx)
     }
 }
 
-size_t
-mavtunnel_finalize_message(uint8_t * buf, mavlink_message_t * msg)
-{
-    uint8_t crc_extra = mavlink_get_crc_extra(msg);
-    size_t min_length = mavlink_min_message_length(msg);
-    mavlink_finalize_message_chan(msg, msg->sysid, msg->compid, MAVLINK_COMM_3,
-        min_length, msg->len, crc_extra);
-    size_t len = mavlink_msg_to_send_buffer(buf, msg);
-    return len;
-}

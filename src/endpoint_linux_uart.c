@@ -94,7 +94,7 @@ ep_linux_uart_init(struct endpoint_linux_uart_t * ep, const char * device_path)
     return MERR_OK;
 }
 
-static ssize_t
+ssize_t
 ep_linux_uart_read(struct mavtunnel_reader_t * rd,
     uint8_t * bytes, size_t len)
 {
@@ -145,8 +145,8 @@ ep_linux_uart_read(struct mavtunnel_reader_t * rd,
     return n;
 }
 
-static enum mavtunnel_error_t
-ep_linux_uart_write(struct mavtunnel_writer_t * wr, mavlink_message_t * msg)
+enum mavtunnel_error_t
+ep_linux_uart_write(struct mavtunnel_writer_t * wr, const uint8_t * bytes, size_t len)
 {
     ASSERT(wr != NULL);
     ASSERT(wr->object != NULL);
@@ -157,11 +157,10 @@ ep_linux_uart_write(struct mavtunnel_writer_t * wr, mavlink_message_t * msg)
         return MERR_END;
     }
 
-    int len = mavtunnel_finalize_message(ep->out, msg);
-    ssize_t written = write(ep->fd, ep->out, len);
-    if (written == -1 || written < len)
+    ssize_t written = write(ep->fd, bytes, len);
+    if (written == -1 || written < (ssize_t) len)
     {
-        WARN("Failed to write to UART device %s (%zd/%d)\n", ep->device_path,
+        WARN("Failed to write to UART device %s (%ld/%lu)\n", ep->device_path,
             written, len);
         return MERR_DEVICE_ERROR;
     }
