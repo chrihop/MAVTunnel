@@ -49,3 +49,17 @@ target_link_libraries(profile_latency_uart
     nlohmann_json::nlohmann_json
 )
 
+add_executable(profile_latency_udp
+    profile_latency_udp.cc)
+
+target_include_directories(profile_latency_udp
+    PRIVATE
+    ${MAVLINK_INCLUDE_DIR}
+    ${JSON_INCLUDE_DIR}
+    )
+
+target_link_libraries(profile_latency_udp
+    PRIVATE
+    nlohmann_json::nlohmann_json
+)
+

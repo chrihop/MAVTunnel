@@ -108,3 +108,13 @@ target_link_libraries(main-udp-mmc
     crypto_abstract
     mbedcrypto
     )
+
+add_executable(main-udp-client
+    main-udp-client.c)
+
+target_link_libraries(main-udp-client
+    PRIVATE
+    mavtunnel
+    crypto_abstract
+    mbedcrypto
+    )

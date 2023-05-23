@@ -354,12 +354,15 @@ protected:
 
     void send(uint8_t * bytes, size_t len) override
     {
+        printf("send %zu bytes to %s:%d\n", len, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
         ::sendto(fd_send, bytes, len, 0, (struct sockaddr *)&addr, sizeof(addr));
     }
 
     ssize_t recv(uint8_t * bytes, size_t len) override
     {
-        return ::recvfrom(fd_recv, bytes, len, 0, nullptr, nullptr);
+        ssize_t n = ::recvfrom(fd_recv, bytes, len, 0, nullptr, nullptr);
+        printf("send %zu bytes\n", n);
+        return n;
     }
 
     void interrupt_send() override
@@ -371,23 +374,38 @@ protected:
     }
 
 public:
-    UDPSendRecvMonitor(size_t n, const std::string& ip, uint16_t port, uint16_t port_recv)
+    UDPSendRecvMonitor(size_t n, uint16_t tx_port, uint16_t rx_port)
         : SendRecvMonitor(n)
     {
         fd_send = ::socket(AF_INET, SOCK_DGRAM, 0);
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(port);
-        inet_aton(ip.c_str(), &addr.sin_addr);
+        struct sockaddr_in addr_send{};
+        addr_send.sin_family = AF_INET;
+        addr_send.sin_port = htons(tx_port);
+        addr_send.sin_addr.s_addr = INADDR_ANY;
+        int rv = ::bind(fd_send, (struct sockaddr *)&addr_send, sizeof(addr_send));
+        if (rv < 0)
+        {
+            throw std::runtime_error("could not bind to port " + std::to_string(tx_port));
+        }
 
         fd_recv = ::socket(AF_INET, SOCK_DGRAM, 0);
         struct sockaddr_in addr_recv{};
         addr_recv.sin_family = AF_INET;
-        addr_recv.sin_port = htons(port_recv);
+        addr_recv.sin_port = htons(rx_port);
         addr_recv.sin_addr.s_addr = INADDR_ANY;
-        int rv = ::bind(fd_recv, (struct sockaddr *)&addr_recv, sizeof(addr_recv));
+        rv = ::bind(fd_recv, (struct sockaddr *)&addr_recv, sizeof(addr_recv));
         if (rv < 0)
         {
-            throw std::runtime_error("could not bind to port " + std::to_string(port_recv));
+            throw std::runtime_error("could not bind to port " + std::to_string(rx_port));
+        }
+
+        uint8_t buf[1];
+        socklen_t len = sizeof(addr);
+        printf("waiting for client connection ...\n");
+        rv = ::recvfrom(fd_recv, buf, 1, 0, (sockaddr *) &addr, &len);
+        if (rv <= 0)
+        {
+            throw std::runtime_error("could not receive from socket");
         }
     }
 };
