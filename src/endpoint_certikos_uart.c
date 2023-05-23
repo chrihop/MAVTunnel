@@ -24,7 +24,7 @@ static ssize_t ep_certikos_uart_read(struct mavtunnel_reader_t * rd,
 }
 
 static enum mavtunnel_error_t
-    ep_certikos_uart_write(struct mavtunnel_writer_t * wr, mavlink_message_t * msg)
+    ep_certikos_uart_write(struct mavtunnel_writer_t * wr, const uint8_t * bytes, size_t len)
 {
     ASSERT(wr != NULL);
     ASSERT(wr->object != NULL);
@@ -35,9 +35,7 @@ static enum mavtunnel_error_t
         return MERR_END;
     }
 
-    size_t len = mavtunnel_finalize_message(ep->out, msg);
-    ASSERT(len <= MAVLINK_MAX_PACKET_LEN && "mavlink message too long");
-    writes(ep->stream, ep->out, len);
+    writes(ep->stream, bytes, len);
 
     return MERR_OK;
 }

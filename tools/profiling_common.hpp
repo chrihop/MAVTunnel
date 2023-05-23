@@ -169,9 +169,6 @@ protected:
             mavlink_finalize_message(&msg, 255, 1,
                 mavlink_min_message_length(&msg), msg.len,
                 mavlink_get_crc_extra(&msg));
-
-            printf("tx msgid = %d, seq = %d\n", msg.msgid, msg.seq);
-
             uint8_t buf[MAVLINK_MAX_PACKET_LEN];
             ssize_t len = mavlink_msg_to_send_buffer(buf, &msg);
             recorder.markSend(&msg);
@@ -194,7 +191,6 @@ protected:
                 {
                     if (mavlink_parse_char(MAVLINK_COMM_1, rx_buf[i], &rx_msg, &rx_status))
                     {
-                        printf("rx msgid = %d, seq = %d\n", rx_msg.msgid, rx_msg.seq);
                         recorder.markReceive(&rx_msg);
                         rx_count++;
                     }
