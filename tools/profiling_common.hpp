@@ -354,23 +354,35 @@ protected:
 
     void send(uint8_t * bytes, size_t len) override
     {
-        printf("send %zu bytes to %s:%d\n", len, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
         ::sendto(fd_send, bytes, len, 0, (struct sockaddr *)&addr, sizeof(addr));
     }
 
     ssize_t recv(uint8_t * bytes, size_t len) override
     {
-        ssize_t n = ::recvfrom(fd_recv, bytes, len, 0, nullptr, nullptr);
-        printf("send %zu bytes\n", n);
+        struct sockaddr client_addr{};
+        socklen_t addrlen = sizeof(client_addr);
+        ssize_t n = ::recvfrom(fd_recv, bytes, len, 0, &client_addr, &addrlen);
         return n;
     }
 
     void interrupt_send() override
     {
+        if (fd_send >= 0)
+        {
+            ::shutdown(fd_send, SHUT_RDWR);
+            ::close(fd_send);
+            fd_send = -1;
+        }
     }
 
     void interrupt_recv() override
     {
+        if (fd_recv >= 0)
+        {
+            ::shutdown(fd_recv, SHUT_RDWR);
+            ::close(fd_recv);
+            fd_recv = -1;
+        }
     }
 
 public:
@@ -402,10 +414,11 @@ public:
         uint8_t buf[1];
         socklen_t len = sizeof(addr);
         printf("waiting for client connection ...\n");
-        rv = ::recvfrom(fd_recv, buf, 1, 0, (sockaddr *) &addr, &len);
+        rv = ::recvfrom(fd_send, buf, 1, 0, (sockaddr *) &addr, &len);
         if (rv <= 0)
         {
             throw std::runtime_error("could not receive from socket");
         }
+        printf("client %s:%d connected\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
     }
 };

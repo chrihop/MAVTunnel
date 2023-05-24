@@ -38,14 +38,14 @@ FetchContent_Declare(
     OVERRIDE_FIND_PACKAGE
 )
 
-message(STATUS "mavlink source dir: ${mavlink_SOURCE_DIR}")
-set (MAVLINK_SOURCE_DIR "${mavlink_SOURCE_DIR}" CACHE STRING "" FORCE)
-set (MAVLINK_INCLUDE_DIR "${mavlink_BINARY_DIR}/include" CACHE STRING "" FORCE)
-
 set (MAVLINK_DIALECT "ardupilotmega" CACHE STRING "" FORCE)
 set (MAVLINK_VERSION "2.0" CACHE STRING "" FORCE)
 
 FetchContent_MakeAvailable(mavlink)
+
+message(STATUS "mavlink source dir: ${mavlink_SOURCE_DIR}")
+set (MAVLINK_SOURCE_DIR "${mavlink_SOURCE_DIR}" CACHE STRING "" FORCE)
+set (MAVLINK_INCLUDE_DIR "${mavlink_BINARY_DIR}/include" CACHE STRING "" FORCE)
 
 add_custom_command(
     OUTPUT ${MAVLINK_DIALECT}-${MAVLINK_VERSION}-stamp
