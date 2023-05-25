@@ -63,3 +63,19 @@ target_link_libraries(profile_latency_udp
     nlohmann_json::nlohmann_json
 )
 
+add_executable(profile_throughput_uart
+    profile_throughput_uart.cc
+    throughput_common.cc)
+
+target_include_directories(profile_throughput_uart
+    PRIVATE
+    ${MAVLINK_INCLUDE_DIR}
+    ${JSON_INCLUDE_DIR}
+    )
+
+target_link_libraries(profile_throughput_uart
+    PRIVATE
+    nlohmann_json::nlohmann_json
+)
+
+

@@ -1,11 +1,11 @@
-#include "profiling_common.hpp"
+#include "latency_common.hpp"
 #include <fstream>
 #include <nlohmann/json.hpp>
 
 int
 main(int argc, char** argv)
 {
-    SerialSendRecvMonitor monitor(100, "/dev/ttyUSB0", "/dev/ttyUSB1");
+    SerialSendRecvMonitor monitor(100, "/dev/ttyUART_IO1", "/dev/ttyUART_IO2");
     monitor.run(5000);
 
     auto           statistics = monitor.statistics();

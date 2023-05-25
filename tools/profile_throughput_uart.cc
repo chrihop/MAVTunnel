@@ -1,29 +1,19 @@
-#include "latency_common.hpp"
+#include "throughput_common.hpp"
 #include <fstream>
 #include <nlohmann/json.hpp>
 
 int
 main(int argc, char** argv)
 {
-    UDPSendRecvMonitor monitor(100, 14550, 15550);
-    monitor.run(5000);
+    SerialThroughputMonitor monitor("/dev/ttyUART_IO1", "/dev/ttyUART_IO2");
+    monitor.run(100, 0, 240, 32);
 
-    auto           statistics = monitor.statistics();
     nlohmann::json j;
-    j["description"] = "MAVTunnel end to end latency (UDP, Pi4)";
+    j["description"] = "MAVTunnel Throughput (UART, 115200, Pi4)";
     if (argc > 1)
     {
         j["argument"] = argv[1];
     }
-    j["total_tx"] = statistics.total_tx;
-    j["total_rx"] = statistics.total_rx;
-    j["drops"]    = statistics.drops;
-    j["latency"]  = {
-        {"unit",  "ns"                   },
-        { "min",  statistics.latency.min },
-        { "max",  statistics.latency.max },
-        { "mean", statistics.latency.mean}
-    };
 
     char        filename[128];
     std::time_t now = std::time(nullptr);
