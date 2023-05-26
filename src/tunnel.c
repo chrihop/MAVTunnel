@@ -17,6 +17,8 @@ mavtunnel_init(struct mavtunnel_t* ctx, size_t id)
     memset(&ctx->rx_status, 0, sizeof(ctx->rx_status));
     memset(&ctx->tx_status, 0, sizeof(ctx->tx_status));
 
+    mavlink_reset_channel_status(id);
+
 #ifdef MAVTUNNEL_PROFILING
     ctx->last_update_us = time_us();
     ctx->exec_time_us = 0;
@@ -89,7 +91,6 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
     ssize_t                n;
     enum mavtunnel_error_t err;
 
-
     n = ctx->reader.read(
         &ctx->reader, ctx->read_buffer, MAVTUNNEL_READ_BUFFER_SIZE);
 
@@ -112,7 +113,7 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
         ctx->count[MT_PERF_RECV_BYTE]++;
         rv = mavlink_parse_char(
             ctx->id, ctx->read_buffer[i], &ctx->rx_msg, &ctx->rx_status);
-        if (rv == 0)
+        if (rv == MAVLINK_FRAMING_INCOMPLETE)
         {
             if (ctx->rx_status.packet_rx_drop_count != 0)
             {
@@ -123,7 +124,7 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
                 continue;
             }
         }
-        else if (rv == 1)
+        else if (rv == MAVLINK_FRAMING_OK)
         {
             ctx->count[MT_PERF_RECV_COUNT] ++;
             if ((err = ctx->codec.encode(&ctx->codec, &ctx->rx_msg)) != MERR_OK)
