@@ -30,6 +30,16 @@ ThroughputEntry::throughput_bps()
 }
 
 uint64_t
+ThroughputEntry::throughput_msgps()
+{
+    double ns = static_cast<double>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            this->end - this->start)
+            .count());
+    return (uint64_t)((double)total_msgs * 1e9 / (double)ns);
+}
+
+uint64_t
 ThroughputEntry::drop_rate_bps()
 {
     double ns = static_cast<double>(
@@ -107,15 +117,9 @@ OverallThroughput::check_in(mavlink_message_t* msg)
     }
 }
 
-
-void
-ThroughputMonitor::run(size_t n, size_t payload_sz_start, size_t payload_sz_end,
-    size_t payload_sz_step)
+void ThroughputMonitor::one_pass(size_t payload_sz, size_t n)
 {
-    for (size_t payload_sz = payload_sz_start; payload_sz <= payload_sz_end;
-         payload_sz += payload_sz_step)
-    {
-        memset(&rx_status, 0, sizeof(rx_status));
+    memset(&rx_status, 0, sizeof(rx_status));
         overall.start(payload_sz, n);
         while (overall.next(&tx_msg))
         {
@@ -150,8 +154,25 @@ ThroughputMonitor::run(size_t n, size_t payload_sz_start, size_t payload_sz_end,
         }
 
         ThroughputEntry & e = *overall.entries.back();
-        printf("Payload size: %zu Throughput %lu B/s Drop Rate %lu B/s Drop %.2f %%\n",
-            payload_sz, e.throughput_bps(), e.drop_rate_bps(), e.drop_rate_percent());
+        printf("Payload size: %zu Throughput %lu B/s %lu msg/s Drop Rate %lu B/s Drop %.2f %%\n",
+            payload_sz, e.throughput_bps(), e.throughput_msgps(), e.drop_rate_bps(), e.drop_rate_percent());
+}
+
+void
+ThroughputMonitor::run(size_t n, size_t payload_sz_start, size_t payload_sz_end,
+    size_t payload_sz_step)
+{
+    printf("warmup ...\n");
+    size_t warmup = 3;
+    while (warmup -- > 0)
+    {
+        one_pass(100, 100);
+    }
+
+    for (size_t payload_sz = payload_sz_start; payload_sz <= payload_sz_end;
+         payload_sz += payload_sz_step)
+    {
+        one_pass(payload_sz, n);
     }
 }
 
@@ -252,3 +273,99 @@ ssize_t SerialThroughputMonitor::recv(uint8_t* buf, size_t len)
     return n;
 }
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
+UDPThroughputMonitor::UDPThroughputMonitor(const uint16_t port_send, const uint16_t port_recv)
+{
+    fd_send = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd_send < 0)
+    {
+        throw std::runtime_error("Failed to create socket");
+    }
+
+    fd_recv = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd_recv < 0)
+    {
+        throw std::runtime_error("Failed to create socket");
+    }
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = htons(port_recv);
+    if (bind(fd_recv, (sockaddr*)&addr, sizeof(addr)) < 0)
+    {
+        throw std::runtime_error("Failed to bind socket");
+    }
+
+    addr.sin_port = htons(port_send);
+    if (bind(fd_send, (sockaddr*)&addr, sizeof(addr)) < 0)
+    {
+        throw std::runtime_error("Failed to bind socket");
+    }
+
+    uint8_t buf[1];
+    socklen_t len = sizeof(sa_send);
+    printf("Waiting for connection ...\n");
+    ssize_t rv = ::recvfrom(fd_send, buf, 1, 0, (sockaddr*)&sa_send, &len);
+    if (rv < 0)
+    {
+        throw std::runtime_error("Failed to establish connection");
+    }
+    printf("client %s connected\n", inet_ntoa(((sockaddr_in *) &sa_send)->sin_addr));
+
+    epoll_recv = epoll_create1(0);
+    if (epoll_recv < 0)
+    {
+        throw std::runtime_error("Failed to create epoll");
+    }
+
+    epoll_event ev{};
+    ev.events = EPOLLIN;
+    ev.data.fd = fd_recv;
+    if (epoll_ctl(epoll_recv, EPOLL_CTL_ADD, fd_recv, &ev) < 0)
+    {
+        throw std::runtime_error("Failed to add fd to epoll");
+    }
+}
+
+UDPThroughputMonitor::~UDPThroughputMonitor()
+{
+    if (fd_send >= 0)
+    {
+        ::close(fd_send);
+    }
+    if (fd_recv >= 0)
+    {
+        ::close(fd_recv);
+    }
+    if (epoll_recv >= 0)
+    {
+        ::close(epoll_recv);
+    }
+}
+
+void UDPThroughputMonitor::send(uint8_t* buf, size_t len)
+{
+    ::sendto(fd_send, buf, len, 0, (sockaddr*)&sa_send, sizeof(sa_send));
+}
+
+ssize_t UDPThroughputMonitor::recv(uint8_t* buf, size_t len)
+{
+    epoll_event epoll_event[1]{};
+    int n_events = epoll_wait(epoll_recv, epoll_event, 1, 100);
+    if (n_events < 0)
+    {
+        throw std::runtime_error("Failed to wait for epoll");
+    }
+    else if (n_events == 0 || epoll_event[0].data.fd != fd_recv)
+    {
+        return -1;
+    }
+
+    sockaddr_in addr{};
+    socklen_t addr_len = sizeof(addr);
+    ssize_t n =  ::recvfrom(fd_recv, buf, len, 0, (sockaddr*)&addr, &addr_len);
+    return n;
+}

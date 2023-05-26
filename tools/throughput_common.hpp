@@ -29,6 +29,7 @@ struct ThroughputEntry
     void     finish(size_t total_bytes, size_t total_msgs, size_t total_drops);
 
     uint64_t throughput_bps();
+    uint64_t throughput_msgps();
     uint64_t drop_rate_bps();
     double   drop_rate_percent();
 };
@@ -60,10 +61,12 @@ protected:
     mavlink_message_t tx_msg {}, rx_msg {};
     mavlink_status_t  rx_status {};
     uint8_t           tx_buf[MAVLINK_MAX_PACKET_LEN] {};
-    uint8_t           rx_buf[4096] {};
+    uint8_t           rx_buf[8192] {};
 
     virtual void      send(uint8_t* buf, size_t len) = 0;
     virtual ssize_t   recv(uint8_t* buf, size_t len) = 0;
+
+    void one_pass(size_t payload_size, size_t messages);
 
 public:
     ThroughputMonitor()          = default;
@@ -72,10 +75,13 @@ public:
         size_t payload_sz_step);
 };
 
+#include <sys/socket.h>
+
 class SerialThroughputMonitor : public ThroughputMonitor
 {
 protected:
     int fd_send {-1}, fd_recv {-1}, epoll_recv{-1};
+    sockaddr sa_send {};
     void send(uint8_t* buf, size_t len) override;
     ssize_t recv(uint8_t* buf, size_t len) override;
 
@@ -84,4 +90,18 @@ protected:
 public:
     SerialThroughputMonitor(const char* f_send, const char * f_recv);
     ~SerialThroughputMonitor() override;
+};
+
+
+class UDPThroughputMonitor : public ThroughputMonitor
+{
+protected:
+    int fd_send {-1}, fd_recv {-1}, epoll_recv{-1};
+    sockaddr sa_send {};
+    void send(uint8_t* buf, size_t len) override;
+    ssize_t recv(uint8_t* buf, size_t len) override;
+
+public:
+    UDPThroughputMonitor(uint16_t port_send, uint16_t port_recv);
+    ~UDPThroughputMonitor() override;
 };

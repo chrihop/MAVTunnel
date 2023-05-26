@@ -79,3 +79,17 @@ target_link_libraries(profile_throughput_uart
 )
 
 
+add_executable(profile_throughput_udp
+    profile_throughput_udp.cc
+    throughput_common.cc)
+
+target_include_directories(profile_throughput_udp
+    PRIVATE
+    ${MAVLINK_INCLUDE_DIR}
+    ${JSON_INCLUDE_DIR}
+    )
+
+target_link_libraries(profile_throughput_udp
+    PRIVATE
+    nlohmann_json::nlohmann_json
+)
