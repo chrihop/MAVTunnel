@@ -73,6 +73,7 @@ public:
     virtual ~ThroughputMonitor() = default;
     void run(size_t n, size_t payload_sz_start, size_t payload_sz_end,
         size_t payload_sz_step);
+    OverallThroughput& get_metrics() { return overall; }
 };
 
 #include <sys/socket.h>

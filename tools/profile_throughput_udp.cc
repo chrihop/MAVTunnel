@@ -14,6 +14,22 @@ main(int argc, char** argv)
     {
         j["argument"] = argv[1];
     }
+    j["unit"] = "Bytes / s";
+    j["messages for each group"] = 100;
+    j["payload size range start"] = 0;
+    j["payload size range end"] = 240;
+    j["payload size range step"] = 32;
+    j["throughput"] = nlohmann::json::array();
+    for (auto& t : monitor.get_metrics().entries)
+    {
+        j["throughput"].push_back({
+            {"payload size", t->payload_size},
+            {"throughput (B/s)", t->throughput_bps()},
+            {"throughput msg/s", t->throughput_msgps()},
+            {"drop rate (B/s)", t->drop_rate_bps()},
+            {"drop rate %", t->drop_rate_percent()},
+        });
+    }
 
     char        filename[128];
     std::time_t now = std::time(nullptr);
