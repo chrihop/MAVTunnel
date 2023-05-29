@@ -21,6 +21,12 @@ else ()
     message(STATUS "MAVTunnel: profiling disabled")
 endif ()
 
+if (MAVTUNNEL_TOOLS)
+    message(STATUS "MAVTunnel: build tools")
+else()
+    message(STATUS "MAVTunnel: tools build disabled")
+endif()
+
 set(CMAKE_C_STANDARD 11)
 
 include(FindPython3)
