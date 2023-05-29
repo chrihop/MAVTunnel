@@ -56,12 +56,54 @@ static void sig_int(int signum)
     ep_linux_udp_client_interrupt(&ep_gcs);
 }
 
+static void usage(char **argv)
+{
+    printf("Usage: %s [-g IP] [PORT] [-s IP] [PORT]\n", argv[0]);
+    printf("\t-g - IP address and (optional) port of GCS. Default 192.168.10.103 15550.\n");
+    printf("\t-s - IP address and (optional) port of SITL. Default 192.168.10.103 14550.\n");
+    printf("\tDefault values are used if option is not specified.\n");
+    printf("Example:\n");
+    printf("\tOnly set IP address:\n\t\t%s -g 192.168.1.10 -s 192.168.1.10\n", argv[0]);
+    printf("\tSet both IP and port:\n\t\t%s -g 192.168.1.10 1234 -s 192.168.1.10 5678\n", argv[0]);
+}
+
 int main(int argc, char ** argv)
 {
+    char *gcs_ip = GCS_IP, *sitl_ip = SITL_IP;
+    int sitl_port = SITL_PORT, gcs_port= GCS_PORT;
+    int i = 1;
+
+    while (i < argc) {
+        if (!strcmp(argv[i], "-g")) {
+            i++;
+            gcs_ip = argv[i];
+            i++;
+            if (i < argc && argv[i][0] != '-') {
+                gcs_port = atoi(argv[i]);
+                i++;
+            } else if (i == argc)
+                break;
+        } else if (!strcmp(argv[i], "-s")) {
+            i++;
+            sitl_ip = argv[i];
+            i++;
+            if (i < argc && argv[i][0] != '-') {
+                sitl_port = atoi(argv[i]);
+                i++;
+            } else if (i == argc)
+                break;
+        } else {
+            usage(argv);
+            return 0;
+        }
+    }
+
+    printf("GCS: %s:%d\n", gcs_ip, gcs_port);
+    printf("SITL: %s:%d\n", sitl_ip, sitl_port);
     mavtunnel_init(&up, 0);
     mavtunnel_init(&down, 1);
-    ep_linux_udp_client_init(&ep_sitl, SITL_IP, SITL_PORT);
-    ep_linux_udp_client_init(&ep_gcs, GCS_IP, GCS_PORT);
+    ep_linux_udp_client_init(&ep_sitl, sitl_ip, sitl_port);
+    ep_linux_udp_client_init(&ep_gcs, gcs_ip, gcs_port);
 
     ep_linux_udp_client_attach_reader(&up, &ep_sitl);
     ep_linux_udp_client_attach_writer(&up, &ep_gcs);
