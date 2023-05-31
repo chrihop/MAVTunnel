@@ -31,10 +31,17 @@ rpi4b_vspells_build:
     - cmake .. -DMAVTUNNEL_TOOLS=y
     - make main-ttyAMA
     - make main-udp-client
+    - mkdir -p bin
+    - cp tests/main-ttyAMA bin/
+    - cp tests/main-udp-client bin/
     - make profile_throughput_udp
     - make profile_throughput_uart
     - make profile_latency_udp
     - make profile_latency_uart
+    - cp tools/profile_throughput_udp bin/
+    - cp tools/profile_throughput_uart bin/
+    - cp tools/profile_latency_udp bin/
+    - cp tools/profile_latency_uart bin/
 
 
     # Generates the MySQL entry and query
@@ -42,6 +49,6 @@ rpi4b_vspells_build:
 
   artifacts:
     paths:
-      - build/img/*
+      - build/bin/*
 
 
