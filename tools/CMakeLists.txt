@@ -49,6 +49,9 @@ target_link_libraries(profile_latency_uart
     nlohmann_json::nlohmann_json
 )
 
+add_dependencies(profile_latency_uart
+    mavlink-headers)
+
 add_executable(profile_latency_udp
     profile_latency_udp.cc)
 
@@ -62,6 +65,9 @@ target_link_libraries(profile_latency_udp
     PRIVATE
     nlohmann_json::nlohmann_json
 )
+
+add_dependencies(profile_latency_udp
+    mavlink-headers)
 
 add_executable(profile_throughput_uart
     profile_throughput_uart.cc
@@ -78,6 +84,8 @@ target_link_libraries(profile_throughput_uart
     nlohmann_json::nlohmann_json
 )
 
+add_dependencies(profile_throughput_uart
+    mavlink-headers)
 
 add_executable(profile_throughput_udp
     profile_throughput_udp.cc
@@ -93,3 +101,6 @@ target_link_libraries(profile_throughput_udp
     PRIVATE
     nlohmann_json::nlohmann_json
 )
+
+add_dependencies(profile_throughput_udp
+    mavlink-headers)
