@@ -4,7 +4,7 @@ stages:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-rpi4b_vspells_build:
+mavtunnel_build:
   stage: build
   # Change this tag to your own (i.e. georgia-tech-runner-1, bae-runner-1, etc. Check https://vspells.ext.bbn.com/groups/<PERFORMER>/-/runners)
   tags:
