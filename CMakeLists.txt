@@ -23,6 +23,12 @@ else ()
     message(STATUS "MAVTunnel: profiling disabled")
 endif ()
 
+if (MAVTUNNEL_TOOLS)
+    message(STATUS "MAVTunnel: build tools")
+else()
+    message(STATUS "MAVTunnel: tools build disabled")
+endif()
+
 # mavtunnel C definitions
 add_compile_definitions(${MAVTUNNEL_C_DEFINITIONS})
 

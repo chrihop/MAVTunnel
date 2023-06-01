@@ -63,7 +63,7 @@ enum mavtunnel_status_t
 
 enum mavtunnel_perf_metrics_t
 {
-    MT_PERF_RECV_COUNT,
+    MT_PERF_RECV_COUNT = 0,
     MT_PERF_RECV_BYTE,
     MT_PERF_DROP_COUNT,
     MT_PERF_SENT_COUNT,
