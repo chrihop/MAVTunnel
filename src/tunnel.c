@@ -3,6 +3,8 @@
 #include "os.h"
 #include "tunnel.h"
 
+#include "endpoint_certikos_uart.h"
+
 #define DEBUG_MODE 0
 
 void
@@ -112,9 +114,12 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
 
     for (ssize_t i = 0; i < n; i++)
     {
+#ifdef MAVTUNNEL_PROFILING
         ctx->count[MT_PERF_RECV_BYTE]++;
+#endif
         rv = mavlink_parse_char(
             ctx->id, ctx->read_buffer[i], &ctx->rx_msg, &ctx->rx_status);
+
         if (rv == MAVLINK_FRAMING_INCOMPLETE)
         {
             if (ctx->rx_status.parse_error != 0)

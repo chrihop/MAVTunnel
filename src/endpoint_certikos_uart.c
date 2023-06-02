@@ -4,6 +4,7 @@
 void ep_certikos_uart_init(struct endpoint_certikos_uart_t * ep, size_t uart)
 {
     ep->terminated = FALSE;
+    ep->dev = uart;
     sys_device_control(uart, DEV_OPEN_CONSOLE, 0, (size_t *) &ep->stream);
 }
 
@@ -20,6 +21,7 @@ static ssize_t ep_certikos_uart_read(struct mavtunnel_reader_t * rd,
     }
 
     size_t n = reads(ep->stream, bytes, len);
+
     return (ssize_t) n;
 }
 
@@ -35,9 +37,8 @@ static enum mavtunnel_error_t
         return MERR_END;
     }
 
-    writes(ep->stream, bytes, len);
-
-    return MERR_OK;
+    int err = writes(ep->stream, bytes, len);
+    return err == SYS_E_SUCC ? MERR_OK : MERR_DEVICE_ERROR;
 }
 
 void ep_certikos_uart_attach_reader(struct mavtunnel_t * tunnel, struct endpoint_certikos_uart_t * ep)

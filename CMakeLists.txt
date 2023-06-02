@@ -6,20 +6,34 @@ option (MAVTUNNEL_BAREMETAL "baremetal build" OFF)
 option (MAVTUNNEL_PROFILING "enable profiling" ON)
 option (MAVTUNNEL_TOOLS     "build tools" OFF)
 
+set (MAVTUNNEL_C_DEFINITIONS "")
+
 if (MAVTUNNEL_BAREMETAL)
     message(STATUS "MAVTunnel: baremetal build")
-    add_compile_definitions(MAVTUNNEL_BAREMETAL)
+    list(APPEND MAVTUNNEL_C_DEFINITIONS MAVTUNNEL_BAREMETAL)
 else ()
     message(STATUS "MAVTunnel: Linux build")
-    add_compile_definitions(MAVTUNNEL_LINUX)
+    list(APPEND MAVTUNNEL_C_DEFINITIONS MAVTUNNEL_LINUX)
 endif ()
 
 if (MAVTUNNEL_PROFILING)
     message(STATUS "MAVTunnel: profiling enabled")
-    add_compile_definitions(MAVTUNNEL_PROFILING)
+    list(APPEND MAVTUNNEL_C_DEFINITIONS MAVTUNNEL_PROFILING)
 else ()
     message(STATUS "MAVTunnel: profiling disabled")
 endif ()
+
+if (MAVTUNNEL_TOOLS)
+    message(STATUS "MAVTunnel: build tools")
+else()
+    message(STATUS "MAVTunnel: tools build disabled")
+endif()
+
+# mavtunnel C definitions
+add_compile_definitions(${MAVTUNNEL_C_DEFINITIONS})
+
+string(REPLACE ";" " " MAVTUNNEL_C_DEFINITIONS_STR "${MAVTUNNEL_C_DEFINITIONS}")
+message(STATUS "MAVTunnel extra C definitions: " ${MAVTUNNEL_C_DEFINITIONS_STR})
 
 set(CMAKE_C_STANDARD 11)
 
@@ -93,6 +107,10 @@ else()
         ${MAVLINK_INCLUDE_DIR}
         ${ATTESTATION_INCLUDE_DIR}
         ${MBEDTLS_INCLUDE_DIR}
+        PARENT_SCOPE)
+
+    set (MAVTUNNEL_C_DEFINITIONS
+        ${MAVTUNNEL_C_DEFINITIONS}
         PARENT_SCOPE)
 endif()
 
