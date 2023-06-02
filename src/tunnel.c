@@ -35,6 +35,7 @@ static const char * perf_metric_name[MAX_MT_PERF_METRICS] =
     "rx",
     "rx_byte",
     "drop",
+    "seq_err",
     "tx",
     "tx_byte",
 };
@@ -149,7 +150,8 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
             static uint32_t prev_seq = 0;
             if(ctx->rx_msg.seq != (prev_seq+1)%256)
             {
-                WARN("tunnel %ld: out of order seq %u -> %u.\n", ctx->id, prev_seq, ctx->rx_msg.seq);
+                //WARN("tunnel %ld: out of order seq %u -> %u.\n", ctx->id, prev_seq, ctx->rx_msg.seq);
+                ctx->count[MT_PERF_SEQ_ERR]++;
             }
             prev_seq = ctx->rx_msg.seq;
 
