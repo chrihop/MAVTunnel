@@ -30,10 +30,11 @@ mavtunnel_init(struct mavtunnel_t* ctx, size_t id)
 #ifdef MAVTUNNEL_PROFILING
 static const char * perf_metric_name[MAX_MT_PERF_METRICS] =
 {
-    "recv",
-    "recv_bytes",
+    "rx",
+    "rx_byte",
     "drop",
-    "send",
+    "tx",
+    "tx_byte",
 };
 
 static void mavtunnel_perf_update(struct mavtunnel_t * ctx)
@@ -55,13 +56,14 @@ static void mavtunnel_perf_update(struct mavtunnel_t * ctx)
     uint64_t cpu_load = ctx->exec_time_us * 100000 / interval;
     ctx->exec_time_us = 0;
 
-    INFO("tunnel %ld: CPU %3lu.%03lu%%, ", ctx->id, cpu_load / 1000, cpu_load % 1000);
+    INFO("tunnel %ld: CPU %3lu.%03lu%%\n", ctx->id, cpu_load / 1000, cpu_load % 1000);
+    printf("\trates: ");
     for (int i = 0; i < MAX_MT_PERF_METRICS; i++)
     {
-        printf("%s rate %3lu.%03lu k/s, ", perf_metric_name[i], rate[i] / 1000,
+        printf("%s %3lu.%03lu k/s, ", perf_metric_name[i], rate[i] / 1000,
             rate[i] % 1000);
     }
-    printf("total: ");
+    printf("\n\ttotals: ");
     for (int i = 0; i < MAX_MT_PERF_METRICS; i++)
     {
         printf("%s %6lu, ", perf_metric_name[i], ctx->count[i]);
@@ -115,6 +117,11 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
             ctx->id, ctx->read_buffer[i], &ctx->rx_msg, &ctx->rx_status);
         if (rv == MAVLINK_FRAMING_INCOMPLETE)
         {
+            if (ctx->rx_status.parse_error != 0)
+            {
+                WARN("tunnel %ld: %lu parse errors\n", ctx->id,
+                    ctx->rx_status.parse_error);
+            }
             if (ctx->rx_status.packet_rx_drop_count != 0)
             {
                 ctx->count[MT_PERF_DROP_COUNT] += ctx->rx_status.packet_rx_drop_count;
@@ -134,6 +141,15 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
                 continue;
             }
 
+            static uint32_t prev_seq = 0;
+            if(ctx->rx_msg.seq != (prev_seq+1)%256)
+            {
+                WARN("tunnel %ld: out of order seq %u -> %u.\n", ctx->id, prev_seq, ctx->rx_msg.seq);
+            }
+            prev_seq = ctx->rx_msg.seq;
+
+
+
             ctx->tx_status.current_tx_seq = ctx->rx_msg.seq;
             size_t len = mavtunnel_finalize_message(ctx->tx_buf, &ctx->tx_status, &ctx->rx_msg);
 
@@ -147,6 +163,15 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
                 ctx->id, ctx->msg.seq, ctx->msg.msgid, ctx->msg.len);
 #endif
             ctx->count[MT_PERF_SENT_COUNT] ++;
+            ctx->count[MT_PERF_SENT_BYTE] += len;
+
+            static size_t prev_rx_bytes = 0;
+            size_t expected_len = ctx->count[MT_PERF_RECV_BYTE] - prev_rx_bytes;
+            if(expected_len != len)
+            {
+                WARN("tunnel %ld: lost %u bytes\n", ctx->id, expected_len - len);
+            }
+            prev_rx_bytes = ctx->count[MT_PERF_RECV_BYTE];
         }
     }
 
