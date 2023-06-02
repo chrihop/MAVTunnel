@@ -85,11 +85,11 @@ struct mavtunnel_t
     mavlink_status_t           rx_status;
     mavlink_status_t           tx_status;
     uint8_t                    tx_buf[MAVTUNNEL_OUTPUT_BUFFER_SIZE];
-//#ifdef MAVTUNNEL_PROFILING
+#ifdef MAVTUNNEL_PROFILING
     uint64_t count[MAX_MT_PERF_METRICS], last[MAX_MT_PERF_METRICS];
     uint64_t exec_time_us;
     uint64_t last_update_us;
-//#endif
+#endif
 };
 
 #define MAVTUNNEL_INIT { .mode = MT_STATUS_UNINITIALIZED };
