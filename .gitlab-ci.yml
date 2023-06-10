@@ -1,0 +1,54 @@
+stages:
+  - build
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+mavtunnel_build:
+  stage: build
+  # Change this tag to your own (i.e. georgia-tech-runner-1, bae-runner-1, etc. Check https://vspells.ext.bbn.com/groups/<PERFORMER>/-/runners)
+  tags:
+    - yale-1
+  image: "richardhabeeb/certikos-build:focal"
+  variables:
+
+  script:
+    # Setup vspells.ext.bbn.com login
+    - echo -e "machine vspells.ext.bbn.com\nlogin gitlab-ci-token\n password ${CI_JOB_TOKEN}" > ~/.netrc
+
+    # Setup proxy variables inside runner
+    - mkdir -p /etc/apt/apt.conf.d/ && echo "Acquire::http::Proxy \"$HTTP_PROXY\"; Acquire::https::Proxy \"$HTTPS_PROXY\";" > /etc/apt/apt.conf.d/proxy.conf
+    - cat /etc/apt/apt.conf.d/proxy.conf
+
+    # Install relevant packages for solution environment (makefile should include dependencies needed for your solution)
+    - apt-get update
+    - apt-get -y install docker.io build-essential cloc python3 python3-pip
+    - python3 -m pip install mysql-connector-python lxml jsonschema
+
+    - git submodule update --init --recursive
+    - mkdir -p build && cd build
+
+    - cmake .. -DMAVTUNNEL_TOOLS=y
+    - make main-ttyAMA
+    - make main-udp-client
+    - mkdir -p bin
+    - cp tests/main-ttyAMA bin/
+    - cp tests/main-udp-client bin/
+    - make profile_throughput_udp
+    - make profile_throughput_uart
+    - make profile_latency_udp
+    - make profile_latency_uart
+    - cp tools/profile_throughput_udp bin/
+    - cp tools/profile_throughput_uart bin/
+    - cp tools/profile_latency_udp bin/
+    - cp tools/profile_latency_uart bin/
+
+
+    # Generates the MySQL entry and query
+    #- python3 ./bin/metric_parsing/metric_parser.py
+
+  artifacts:
+    paths:
+      - build/bin/*
+
+

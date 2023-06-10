@@ -30,14 +30,14 @@ mavtunnel_init(struct mavtunnel_t* ctx, size_t id)
 }
 
 #ifdef MAVTUNNEL_PROFILING
-static const char * perf_metric_name[MAX_MT_PERF_METRICS] =
-{
-    "rx",
-    "rx_byte",
-    "drop",
-    "seq_err",
-    "tx",
-    "tx_byte",
+static const char* perf_metric_name[] = {
+    [MT_PERF_RECV_COUNT] = "rx",
+    [MT_PERF_RECV_BYTE]  = "rx_byte",
+    [MT_PERF_DROP_BYTE]  = "drop",
+    [MT_PERF_DROP_COUNT] = "drop_byte",
+    [MT_PERF_SEQ_ERR]    = "seq_err",
+    [MT_PERF_SENT_COUNT] = "tx",
+    [MT_PERF_SENT_BYTE]  = "tx_byte",
 };
 
 static void mavtunnel_perf_update(struct mavtunnel_t * ctx)
@@ -125,9 +125,9 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
         {
             if (ctx->rx_status.parse_error != 0)
             {
-                WARN("tunnel %ld: %lu parse errors\n", ctx->id,
-                    ctx->rx_status.parse_error);
+                WARN("tunnel %ld: %u parse errors\n", ctx->id, ctx->rx_status.parse_error);
             }
+
             if (ctx->rx_status.packet_rx_drop_count != 0)
             {
                 ctx->count[MT_PERF_DROP_COUNT] += ctx->rx_status.packet_rx_drop_count;
@@ -180,7 +180,7 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
             size_t expected_len = ctx->count[MT_PERF_RECV_BYTE] - prev_rx_bytes;
             if(expected_len != len)
             {
-                WARN("tunnel %ld: lost %u bytes\n", ctx->id, expected_len - len);
+                ctx->count[MT_PERF_DROP_BYTE] += expected_len - len;
             }
             prev_rx_bytes = ctx->count[MT_PERF_RECV_BYTE];
         }

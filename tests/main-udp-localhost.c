@@ -58,16 +58,18 @@ int main(int argc, char ** argv)
 {
     mavtunnel_init(&up, 0);
     mavtunnel_init(&down, 1);
-    ep_linux_udp_init(&ep_sitl, "127.0.0.1", SITL_PORT);
+    ep_linux_udp_init(&ep_sitl, SITL_PORT);
     ep_linux_udp_client_init(&ep_gcs, "127.0.0.1", GCS_PORT);
 
     ep_linux_udp_attach_reader(&up, &ep_sitl);
     ep_linux_udp_client_attach_writer(&up, &ep_gcs);
     codec_chacha20_attach(&up, &encrypt);
+//    codec_passthrough_attach(&up);
 
     ep_linux_udp_client_attach_reader(&down, &ep_gcs);
     ep_linux_udp_attach_writer(&down, &ep_sitl);
     codec_chacha20_attach(&down, &decrypt);
+//    codec_passthrough_attach(&down);
 
     signal(SIGINT, sig_int);
     atomic_store(&to_exit, false);
