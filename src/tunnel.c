@@ -132,8 +132,12 @@ mavtunnel_spin_once(struct mavtunnel_t* ctx)
             {
                 ctx->count[MT_PERF_DROP_COUNT] += ctx->rx_status.packet_rx_drop_count;
 
-                WARN("tunnel %ld: %d packets dropped. total dropped %lu\n", ctx->id,
-                    ctx->rx_status.packet_rx_drop_count, ctx->count[MT_PERF_DROP_COUNT]);
+                WARN("tunnel %ld: %d dropped @ rx=%llu (state=%llu). total dropped %lu\n",
+                    ctx->id,
+                    ctx->rx_status.packet_rx_drop_count,
+                    ctx->count[MT_PERF_RECV_BYTE],
+                    ctx->rx_status.parse_state,
+                    ctx->count[MT_PERF_DROP_COUNT]);
                 continue;
             }
         }
