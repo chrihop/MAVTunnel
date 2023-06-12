@@ -3,8 +3,6 @@
 #include "os.h"
 #include "tunnel.h"
 
-#include "endpoint_certikos_uart.h"
-
 #define DEBUG_MODE 0
 
 void

@@ -116,10 +116,10 @@ endif()
 
 if (MAVTUNNEL_BAREMETAL)
     if (BUILD_FOR STREQUAL "certikos_kernel")
-        message(STATUS "Attestation: CertiKOS kernel build")
+        message(STATUS "MAVTunnel: CertiKOS kernel build")
         add_compile_definitions(CERTIKOS_KERNEL)
     elseif (BUILD_FOR STREQUAL "certikos_user")
-        message(STATUS "Attestation: CertiKOS user build")
+        message(STATUS "MAVTunnel: CertiKOS user build")
         add_compile_definitions(CERTIKOS_USER)
     else()
 
@@ -172,9 +172,6 @@ link_libraries(
 )
 
 endif()
-
-
-
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function")
 add_compile_options(-Wno-address-of-packed-member)
